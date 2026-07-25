@@ -10,3 +10,5 @@ pnpm-debug.log*
 dist
 .wallet-test
 tsconfig.tsbuildinfo
+
+.vercel
