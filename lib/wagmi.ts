@@ -1,12 +1,9 @@
 "use client";
 
 import { coinbaseWallet, injected } from "wagmi/connectors";
-import { createConfig, http } from "wagmi";
+import { cookieStorage, createConfig, createStorage, http } from "wagmi";
 import { base } from "wagmi/chains";
 import { metaMaskTarget, okxTarget } from "@/lib/walletProviders";
-
-const rawDataSuffix = process.env.NEXT_PUBLIC_DATA_SUFFIX;
-export const dataSuffix = rawDataSuffix?.startsWith("0x") ? (rawDataSuffix as `0x${string}`) : undefined;
 
 export const okxConnector = injected({
   target: okxTarget,
@@ -26,6 +23,9 @@ export const coinbaseConnector = coinbaseWallet({
 export const wagmiConfig = createConfig({
   chains: [base],
   connectors: [okxConnector, metaMaskConnector, coinbaseConnector],
+  storage: createStorage({
+    storage: cookieStorage
+  }),
   transports: {
     [base.id]: http()
   }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppProviders } from "@/components/AppProviders";
-import { baseAppId } from "@/lib/config";
+import { baseAppId, talentProjectVerification } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "BaseRank",
@@ -13,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <meta name="base:app_id" content={baseAppId} />
+        <meta name="talentapp:project_verification" content={talentProjectVerification} />
       </head>
       <body>
         <AppProviders>{children}</AppProviders>

@@ -1,13 +1,15 @@
 "use client";
 
-import { readContract, waitForTransactionReceipt, writeContract } from "@wagmi/core";
+import { readContract, sendTransaction, waitForTransactionReceipt } from "@wagmi/core";
 import { Activity, Award, Crown, ExternalLink, Medal, RefreshCw, Send, TrendingUp, Trophy } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { concatHex, encodeFunctionData } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { baseRankAbi } from "@/lib/baseRankAbi";
-import { chainId, configuredDataSuffix, contractAddress, emptyAddress, shortAddress, tail } from "@/lib/config";
+import { builderCode, chainId, contractAddress, emptyAddress, shortAddress } from "@/lib/config";
 import { getErrorMessage, getTransactionErrorMessage } from "@/lib/errors";
-import { dataSuffix, wagmiConfig } from "@/lib/wagmi";
+import { attributionStatusText, attributionVersion, dataSuffix, dataSuffixTail, isDataSuffixEnabled } from "@/lib/attribution";
+import { wagmiConfig } from "@/lib/wagmi";
 import { LeaderboardEntry, normalizePlayers, normalizeUser, toSafeNumber, UserStats } from "@/lib/normalize";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { WalletButtons } from "@/components/WalletButtons";
@@ -157,12 +159,16 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get("ref");
       const referrer = ref && /^0x[a-fA-F0-9]{40}$/.test(ref) ? (ref as `0x${string}`) : emptyAddress;
-      const hash = await writeContract(wagmiConfig, {
-        address: addressForWrite,
+      const callData = encodeFunctionData({
         abi: baseRankAbi,
         functionName: "earnPoints",
-        args: [referrer],
-        ...(dataSuffix ? ({ dataSuffix } as { dataSuffix: `0x${string}` }) : {})
+        args: [referrer]
+      });
+      const data = concatHex([callData, dataSuffix]);
+      const hash = await sendTransaction(wagmiConfig, {
+        to: addressForWrite,
+        data,
+        value: 0n
       });
 
       await waitForTransactionReceipt(wagmiConfig, { hash });
@@ -220,8 +226,10 @@ export default function Home() {
               <Info label="Contract address" value={contractAddress ?? "Not configured"} />
               <Info label="Network" value="Base" />
               <Info label="Chain ID" value={String(chainId)} />
-              <Info label="Attribution status" value={configuredDataSuffix ? "Configured" : "Missing data suffix"} />
-              <Info label="dataSuffix tail" value={tail(configuredDataSuffix)} />
+              <Info label="Builder code" value={builderCode} />
+              <Info label="Onchain attribution" value={attributionStatusText} />
+              <Info label="Attribution version" value={attributionVersion} />
+              <Info label="dataSuffix tail" value={isDataSuffixEnabled ? dataSuffixTail : "Not configured"} />
             </dl>
           </div>
         </section>
